@@ -3,10 +3,13 @@
 const mysql = require("mysql2");
 //Express:
 const express = require("express");
+//Checks input:
+const inputCheck = require("./utils/inputCheck");
 
 //nodemon:
 const nodemon = require("nodemon");
 
+//Port information:
 const PORT = process.env.PORT || 3001;
 const app = express();
 
@@ -18,11 +21,6 @@ app.use(express.json());
 //Default response for any other request (Not Found)
 app.use((req, res) => {
   res.status(404).end();
-});
-
-//Starts the express server on port 3001:
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
 });
 
 // code that will connect the application to the MySQL database:
@@ -43,37 +41,95 @@ const db = mysql.createConnection(
 //Server is running on port 3001
 
 //Database calls:
-//query the database to test the connection:
-// db.query(`SELECT * FROM candidates`, (err, rows) => {
-//   console.log(rows);
-// });
+// Get all candidates
+app.get("/api/candidates", (req, res) => {
+  const sql = `SELECT * FROM candidates`;
+
+  db.query(sql, (err, rows) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json({
+      message: "success",
+      data: rows,
+    });
+  });
+});
 
 //Create Query for Read Operation:
 //GET a single candidate:
-db.query(`SELECT * FROM candidates WHERE id = 1`, (err, row) => {
-  if (err) {
-    console.log(err);
-  }
+app.get("/api/candidate/:id", (req, res) => {
+  const sql = `SELECT * FROM candidates WHERE id = ?`;
+  const params = [req.params.id];
 
-  console.log(row);
+  db.query(sql, params, (err, row) => {
+    if (err) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+    res.json({
+      message: "success",
+      data: row,
+    });
+  });
 });
 
 //DELETE a candidate:
-db.query(`DELETE FROM candidates WHERE id = ?`, 1, (err, result) => {
-  if (err) {
-    console.log(err);
-  }
-  console.log(result);
+app.delete("/api/candidate/:id", (req, res) => {
+  const sql = `DELETE FROM candidates WHERE id = ?`;
+  const params = [req.params.id];
+
+  db.query(sql, params, (err, result) => {
+    if (err) {
+      res.statusMessage(400).json({ error: res.message });
+    } else if (!result.affectedRows) {
+      res.json({
+        message: "Candidate not found",
+      });
+    } else {
+      res.json({
+        message: "deleted",
+        changes: result.affectedRows,
+        id: req.params.id,
+      });
+    }
+  });
 });
 
 //Query for Create Operation:
-const sql = `INSERT INTO candidates (id, first_name, last_name, industry_connected)
-    VALUES (?,?,?,?)`;
-const params = [1, "Ronald", "Firbank", 1];
-
-db.query(sql, params, (err, result) => {
-  if (err) {
-    console.log(err);
+// Create a candidate/POST routine:
+app.post("/api/candidate", ({ body }, res) => {
+  const errors = inputCheck(
+    body,
+    "first_name",
+    "last_name",
+    "industry_connected"
+  );
+  if (errors) {
+    res.status(400).json({ error: errors });
+    return;
   }
-  console.log(result);
+
+  const sql = `INSERT INTO candidates (first_name, last_name, industry_connected)
+    VALUES (?,?,?)`;
+  const params = [body.first_name, body.last_name, body.industry_connected];
+
+  db.query(sql, params, (err, result) => {
+    if (err) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+    res.json({
+      message: "success",
+      data: body,
+    });
+  });
+});
+
+//Create the GET routes:
+
+//Starts the express server on port 3001:
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
