@@ -18,10 +18,6 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 //Routes:
-//Default response for any other request (Not Found)
-app.use((req, res) => {
-  res.status(404).end();
-});
 
 // code that will connect the application to the MySQL database:
 //Connect to database:
@@ -127,7 +123,10 @@ app.post("/api/candidate", ({ body }, res) => {
   });
 });
 
-//Create the GET routes:
+//Default response for any other request (Not Found)
+app.use((req, res) => {
+  res.status(404).end();
+});
 
 //Starts the express server on port 3001:
 app.listen(PORT, () => {
