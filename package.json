@@ -1,0 +1,31 @@
+{
+  "name": "u-develop-it",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JeffGoji/u-develop-it.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JeffGoji/u-develop-it/issues"
+  },
+  "homepage": "https://github.com/JeffGoji/u-develop-it#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "mysql2": "^2.3.2"
+  },
+  "devDependencies": {
+    "jest": "^27.3.1"
+  },
+  "start": "node server.js"
+}
