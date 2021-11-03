@@ -22,7 +22,8 @@
   "homepage": "https://github.com/JeffGoji/u-develop-it#readme",
   "dependencies": {
     "express": "^4.17.1",
-    "mysql2": "^2.3.2"
+    "mysql2": "^2.3.2",
+    "nodemon": "^2.0.14"
   },
   "devDependencies": {
     "jest": "^27.3.1"
