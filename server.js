@@ -37,9 +37,13 @@ const db = mysql.createConnection(
 //Server is running on port 3001
 
 //Database calls:
-// Get all candidates
+// Get all candidates and their party affiliation
 app.get("/api/candidates", (req, res) => {
-  const sql = `SELECT * FROM candidates`;
+  const sql = `SELECT candidates.*, parties.name 
+                AS party_name 
+                FROM candidates 
+                LEFT JOIN parties 
+                ON candidates.party_id = parties.id`;
 
   db.query(sql, (err, rows) => {
     if (err) {
@@ -53,10 +57,99 @@ app.get("/api/candidates", (req, res) => {
   });
 });
 
+//Parties database route:
+app.get("/api/parties", (req, res) => {
+  const sql = `SELECT * FROM parties`;
+  db.query(sql, (err, rows) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json({
+      message: "success",
+      data: rows,
+    });
+  });
+});
+
+//Route for parties that includes the ID parameter:
+app.get("/api/party/:id", (req, res) => {
+  const sql = `SELECT * FROM parties WHERE id = ?`;
+  const params = [req.params.id];
+  db.query(sql, params, (err, row) => {
+    if (err) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+    res.json({
+      message: "success",
+      data: row,
+    });
+  });
+});
+
+//DELETE parties route:
+app.delete("/api/party/:id", (req, res) => {
+  const sql = `DELETE FROM parties WHERE id = ?`;
+  const params = [req.params.id];
+  db.query(sql, params, (err, result) => {
+    if (err) {
+      res.status(400).json({ error: res.message });
+      // checks if anything was deleted
+    } else if (!result.affectedRows) {
+      res.json({
+        message: "Party not found",
+      });
+    } else {
+      res.json({
+        message: "deleted",
+        changes: result.affectedRows,
+        id: req.params.id,
+      });
+    }
+  });
+});
+
+//UPDATE Candidates party route:
+// Update a candidate's party
+app.put("/api/candidate/:id", (req, res) => {
+  const errors = inputCheck(req.body, "party_id");
+
+  if (errors) {
+    res.status(400).json({ error: errors });
+    return;
+  }
+  const sql = `UPDATE candidates SET party_id = ? 
+               WHERE id = ?`;
+  const params = [req.body.party_id, req.params.id];
+  db.query(sql, params, (err, result) => {
+    v;
+    if (err) {
+      res.status(400).json({ error: err.message });
+      // check if a record was found
+    } else if (!result.affectedRows) {
+      res.json({
+        message: "Candidate not found",
+      });
+    } else {
+      res.json({
+        message: "success",
+        data: req.body,
+        changes: result.affectedRows,
+      });
+    }
+  });
+});
+
 //Create Query for Read Operation:
-//GET a single candidate:
+// Get single candidate with party affiliation
 app.get("/api/candidate/:id", (req, res) => {
-  const sql = `SELECT * FROM candidates WHERE id = ?`;
+  const sql = `SELECT candidates.*, parties.name 
+               AS party_name 
+               FROM candidates 
+               LEFT JOIN parties 
+               ON candidates.party_id = parties.id 
+               WHERE candidates.id = ?`;
   const params = [req.params.id];
 
   db.query(sql, params, (err, row) => {
